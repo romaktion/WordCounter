@@ -1,7 +1,8 @@
 #pragma once
 #include <future>
 
-template<typename L> auto __await_async(L lambda)->decltype(lambda())
+template<typename L>
+decltype(auto) __await_async(L lambda)
 {
 	auto f = std::async(std::launch::deferred, [=]()
 	{
