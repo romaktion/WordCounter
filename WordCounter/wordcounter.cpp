@@ -1,41 +1,54 @@
 #include "pch.h"
 #include "wordcounter.h"
+#include "text.h"
 
 
 wordcounter::wordcounter(const std::string& path)
 {
   auto timer = std::make_unique<timing>();
 
-  auto inf = std::ifstream(path, std::ios::binary);
+  //open
+  std::ifstream inf(path, std::ios::binary);
   if (!inf.is_open())
     return;
 
+  //calc lenght
   inf.seekg(0, std::ios::end);
   const auto lenght = (unsigned)inf.tellg();
-
-  std::cout << "Input file size: " << lenght / (double)1000000 << " Mb\n";
-
   inf.seekg(0, std::ios::beg);
-  const unsigned part = (lenght % _threads_amount) == 0
-    ? lenght / _threads_amount : lenght / _threads_amount + 1;
-  _buffer = new char[lenght + 1];
-  inf.read(_buffer, lenght);
-  inf.close();
-  _buffer[lenght] = '\0';
-  char* beg = _buffer;
 
+  std::cout << "Input file size: " << lenght / (float)1000000 << " Mb\n";
+
+  //split up
+  const auto part = (lenght % _threads_amount) == 0
+    ? lenght / _threads_amount : lenght / _threads_amount + 1;
+  auto l_buffer = new char[lenght + UTF8_SEQUENCE_MAXLEN];
+
+  //read
+  inf.read(l_buffer, lenght);
+  inf.close();
+  l_buffer[lenght] = '\0';
+
+  //convert
+  auto wt = std::make_unique<text>(l_buffer);
+  delete[] l_buffer;
+  _buffer = (wchar_t*)wt->wide_string().c_str();
+  const size_t wlenght = wcslen(_buffer) + UTF8_SEQUENCE_MAXLEN;
+
+  //tune
   _threads.reserve(_threads_amount);
-  std::vector<char*> buffers;
+  std::vector<wchar_t*> buffers;
   buffers.reserve(_threads_amount);
 
-  const char* const end = beg + lenght;
-  char* pch = beg + part;
+  auto beg = _buffer;
+  const wchar_t* const end = beg + wlenght;
+  auto pch = beg + part;
 
-  auto push_back = [&buffers](char* str) { buffers.push_back(str); };
+  auto push_back = [&buffers](wchar_t* str) { buffers.push_back(str); };
 
   for (unsigned i = 0; i < _threads_amount; i++)
   {
-    pch = strpbrk(pch, DELIMITER);
+    pch = wcspbrk(pch, DELIMITER);
     if (!pch)
     {
       if (beg)
@@ -69,6 +82,7 @@ wordcounter::wordcounter(const std::string& path)
     }
   }
 
+  //launch
   for (auto& b : buffers)
     if (b)
     {
@@ -86,8 +100,6 @@ wordcounter::~wordcounter()
   for (auto& t : _threads)
     if (t.joinable())
       t.join();
-
-  delete[] _buffer;
 }
 
 const parse_result wordcounter::get() const
@@ -107,7 +119,7 @@ void wordcounter::proceed()
   _cond.notify_all();
 }
 
-void wordcounter::worker(char* buffer)
+void wordcounter::worker(wchar_t* buffer)
 {
   auto timer = std::make_unique<timing>();
 
@@ -115,7 +127,7 @@ void wordcounter::worker(char* buffer)
 
   std::scoped_lock<std::mutex> lock(_micro_mutex);
 
-  for (std::map<std::string, unsigned>::const_iterator it = res.words_amount.begin(); it != res.words_amount.end(); ++it)
+  for (std::map<std::wstring, unsigned>::const_iterator it = res.words_amount.begin(); it != res.words_amount.end(); ++it)
     insert_word_to_word_counter(_parse_result, it);
 
   _parse_result.symbol_amount += res.symbol_amount;
@@ -127,28 +139,22 @@ void wordcounter::worker(char* buffer)
     proceed();
 }
 
-parse_result wordcounter::parse(char* buffer)
+parse_result wordcounter::parse(wchar_t* buffer)
 {
   if (!buffer)
-    return parse_result();
+    return {};
 
-  bool prevois_is_alpha = false;
+  auto prevois_is_alpha = false;
   parse_result res;
 
-#ifdef _DEBUG
-  //remove not valid chars
-  char* const end_of_buffer = std::remove_if(&buffer[0], &buffer[strlen(buffer)], [](char const c) { return ((int)c < -1 || (int)c > 255 || c == '\r'); });
-  *end_of_buffer = '\0';
-#else
-  char* const end_of_buffer = buffer + strlen(buffer);
-#endif
+  const auto end_of_buffer = buffer + wcslen(buffer);
 
   while (buffer)
   {
-    char* end_of_word = nullptr;
+    wchar_t* end_of_word = nullptr;
     auto word = buffer;
 
-    buffer = strpbrk(buffer, DELIMITER);
+    buffer = wcspbrk(buffer, DELIMITER);
     if (buffer)
     {
       if (buffer - word < 1)
@@ -165,13 +171,12 @@ parse_result wordcounter::parse(char* buffer)
       end_of_word = end_of_buffer;
     }
 
-    //word analysis cycle TODO Change to ptr++
     for (auto it = word; it != end_of_word; ++it)
     {
-      if (!isalpha(*it))
+      if (!iswalpha(*it))
       {
         //delete symbol condition
-        if (*it != "'"[0] || !prevois_is_alpha || !isalpha(*(it + 1)) || it == word)
+        if (*it != "'"[0] || !prevois_is_alpha || !iswalpha(*(it + 1)) || it == word)
         {
           for (auto p = it; p < end_of_word; p++)
             *p = *(p + 1);
@@ -187,7 +192,7 @@ parse_result wordcounter::parse(char* buffer)
         //separate word if two words detected in one word
         if (!prevois_is_alpha && it != word && *(it - 1) != "'"[0])
         {
-          insert_word_to_word_counter(res, std::string(word, it));
+          insert_word_to_word_counter(res, std::wstring(word, it));
           word = it;
         }
 
@@ -198,26 +203,26 @@ parse_result wordcounter::parse(char* buffer)
     }
 
     if (word != end_of_word)
-      insert_word_to_word_counter(res, std::string(word, end_of_word));
+      insert_word_to_word_counter(res, std::wstring(word, end_of_word));
   }
 
   return res;
 }
 
-void wordcounter::insert_word_to_word_counter(parse_result& res, const std::string& in_word)
+void wordcounter::insert_word_to_word_counter(parse_result& res, const std::wstring& in_word)
 {
-  std::map<std::string, unsigned>::iterator it = res.words_amount.find(in_word);
+  std::map<std::wstring, unsigned>::iterator it = res.words_amount.find(in_word);
   if (it != res.words_amount.end())
     it->second++;
   else
-    res.words_amount.insert(std::pair<std::string, unsigned>(in_word, 1));
+    res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word, 1));
 }
 
-void wordcounter::insert_word_to_word_counter(parse_result& res, const std::map<std::string, unsigned>::const_iterator& in_word_counter)
+void wordcounter::insert_word_to_word_counter(parse_result& res, const std::map<std::wstring, unsigned>::const_iterator& in_word_counter)
 {
-  std::map<std::string, unsigned>::iterator it = res.words_amount.find(in_word_counter->first);
+  std::map<std::wstring, unsigned>::iterator it = res.words_amount.find(in_word_counter->first);
   if (it != res.words_amount.end())
     it->second += in_word_counter->second;
   else
-    res.words_amount.insert(std::pair<std::string, unsigned>(in_word_counter->first, in_word_counter->second));
+    res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word_counter->first, in_word_counter->second));
 }

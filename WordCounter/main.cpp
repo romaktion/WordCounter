@@ -2,6 +2,8 @@
 
 #include "pch.h"
 #include "text.h"
+#include <locale>
+#include <codecvt>
 
 
 int main(int argc, char* argv[], char* envp[])
@@ -61,20 +63,21 @@ int main(int argc, char* argv[], char* envp[])
 
   const auto [in_path, out_path] = init_path();
 
-  std::ifstream inf(in_path);
+  std::wifstream inf(in_path);
 
   if (!inf.is_open())
     return 1;
   else
     inf.close();
 
-  std::ofstream of(out_path);
+  std::wofstream of(out_path, std::ios::binary);
 
   if (!of.is_open())
   {
     inf.close();
     return 1;
   }
+  of.imbue(std::locale(""));
 
   std::cout << "input file: " << in_path << '\n';
 

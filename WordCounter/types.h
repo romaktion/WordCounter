@@ -2,9 +2,9 @@
 
 struct parse_result
 {
-	int symbol_amount;
-	std::map<std::string, unsigned> words_amount;
+	unsigned symbol_amount = 0;
+	std::map<std::wstring, unsigned> words_amount;
 
 	parse_result();
-	parse_result(int symbol_amount, std::map<std::string, unsigned> words_amount);
+	parse_result(unsigned symbol_amount, std::map<std::wstring, unsigned> words_amount);
 };
