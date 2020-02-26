@@ -35,10 +35,37 @@ const std::string& text::byte_string() const
   return cached_byte_string;
 }
 
+const symbol& text::operator[](int index) const
+{
+  if (cached_unicode_string.size() <= 0)
+  {
+    if (cached_byte_string.size() <= 0)
+      text(cached_wide_string.c_str());
+
+    cached_unicode_string.assign(cached_byte_string);
+  }
+  
+  return cached_unicode_string[index];
+}
+
+symbol& text::operator[](int index)
+{
+  if (cached_unicode_string.size() <= 0)
+  {
+    if (cached_byte_string.size() <= 0)
+      text(cached_wide_string.c_str());
+
+    cached_unicode_string.assign(cached_byte_string);
+  }
+  
+  return cached_unicode_string[index];
+}
+
 text* text::text::operator->()
 {
   cached_byte_string.clear();
   cached_wide_string.clear();
+  cached_unicode_string.clear();
 
   return this;
 }
@@ -62,7 +89,7 @@ void text::_iconv(const char* instr, const char* in_encode, std::wstring& outstr
 void text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode)
 {
   char* res = nullptr;
-  _iconv_internal((const char*)instr, in_encode, &res, out_encode);
+  _iconv_internal(instr, in_encode, &res, out_encode);
   outstr.assign(res);
   delete[] res;
 }
@@ -70,7 +97,7 @@ void text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outs
 void text::_iconv(const wchar_t* instr, const char* in_encode, std::wstring& outstr, const char* out_encode)
 {
   char* res = nullptr;
-  _iconv_internal((const char*)instr, in_encode, &res, out_encode);
+  _iconv_internal(instr, in_encode, &res, out_encode);
   outstr.assign((wchar_t*)res);
   delete[] res;
 }
@@ -106,4 +133,12 @@ void text::_iconv_internal(const char* instr, const char* in_encode, char** outs
   iconv_close(cd);
 
   *outstr = result;
+}
+
+void text::_iconv_internal(const wchar_t* instr, const char* in_encode, char** outstr, const char* out_encode)
+{
+  const size_t byte_size = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
+  auto bytestr = new char[byte_size];
+  
+  _iconv_internal(bytestr, in_encode, outstr, out_encode);
 }
