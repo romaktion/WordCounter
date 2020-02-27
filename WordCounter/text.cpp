@@ -22,7 +22,7 @@ text::text(const char* byte_string)
 const std::wstring& text::wide_string() const
 {
   if (cached_wide_string.empty() && !cached_byte_string.empty())
-    text(cached_byte_string.c_str());
+    _iconv(cached_byte_string.c_str(), "", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
 
   return cached_wide_string;
 }
@@ -30,7 +30,7 @@ const std::wstring& text::wide_string() const
 const std::string& text::byte_string() const
 {
   if (cached_byte_string.empty() && !cached_wide_string.empty())
-    text(cached_wide_string.c_str());
+    _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
 
   return cached_byte_string;
 }
@@ -40,7 +40,7 @@ const symbol& text::operator[](int index) const
   if (cached_unicode_string.size() <= 0)
   {
     if (cached_byte_string.size() <= 0)
-      text(cached_wide_string.c_str());
+      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
 
     cached_unicode_string.assign(cached_byte_string);
   }
@@ -53,7 +53,7 @@ symbol& text::operator[](int index)
   if (cached_unicode_string.size() <= 0)
   {
     if (cached_byte_string.size() <= 0)
-      text(cached_wide_string.c_str());
+      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
 
     cached_unicode_string.assign(cached_byte_string);
   }
@@ -70,43 +70,49 @@ text* text::text::operator->()
   return this;
 }
 
-void text::_iconv(const char* instr, const char* in_encode, std::string& outstr, const char* out_encode)
+void text::_iconv(const char* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  _iconv_internal(instr, in_encode, &res, out_encode);
+  size_t insize = strlen(instr) + 1;
+  size_t outsize = insize * UTF8_SEQUENCE_MAXLEN;
+  _iconv_internal(instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign(res);
   delete[] res;
 }
 
-void text::_iconv(const char* instr, const char* in_encode, std::wstring& outstr, const char* out_encode)
+void text::_iconv(const char* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  _iconv_internal(instr, in_encode, &res, out_encode);
+  size_t insize = strlen(instr) + 1;
+  size_t outsize = insize * UTF8_SEQUENCE_MAXLEN;
+  _iconv_internal(instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign((wchar_t*)res);
   delete[] res;
 }
 
-void text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode)
+void text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  _iconv_internal(instr, in_encode, &res, out_encode);
+  size_t insize = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
+  size_t outsize = insize;
+  _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign(res);
   delete[] res;
 }
 
-void text::_iconv(const wchar_t* instr, const char* in_encode, std::wstring& outstr, const char* out_encode)
+void text::_iconv(const wchar_t* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  _iconv_internal(instr, in_encode, &res, out_encode);
+  size_t insize = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
+  size_t outsize = insize;
+  _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign((wchar_t*)res);
   delete[] res;
 }
 
-void text::_iconv_internal(const char* instr, const char* in_encode, char** outstr, const char* out_encode)
+void text::_iconv_internal(const char* instr, const char* in_encode, size_t& insize, char** outstr, const char* out_encode, size_t& outsize) const
 {
-  size_t srclen = strlen(instr) + 1;
-  size_t outlen = srclen * UTF8_SEQUENCE_MAXLEN;
-  auto result = new char[outlen];
+  auto result = new char[outsize];
 
 #ifdef __linux__
   auto inptr = (char*)bytestr;
@@ -123,7 +129,7 @@ void text::_iconv_internal(const char* instr, const char* in_encode, char** outs
       std::cerr << "iconv_open\n";
 
   auto outptr = result;
-  auto nconv = iconv(cd, &inptr, &srclen, &outptr, &outlen);
+  auto nconv = iconv(cd, &inptr, &insize, &outptr, &outsize);
   if (nconv == (size_t)-1)
     if (errno == EINVAL)
       std::cerr << "This is harmless.\n";
@@ -133,12 +139,4 @@ void text::_iconv_internal(const char* instr, const char* in_encode, char** outs
   iconv_close(cd);
 
   *outstr = result;
-}
-
-void text::_iconv_internal(const wchar_t* instr, const char* in_encode, char** outstr, const char* out_encode)
-{
-  const size_t byte_size = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
-  auto bytestr = new char[byte_size];
-  
-  _iconv_internal(bytestr, in_encode, outstr, out_encode);
 }
