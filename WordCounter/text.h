@@ -25,6 +25,7 @@ private:
   void _iconv_internal(const char* instr, const char* in_encode, size_t& insize, char** outstr, const char* out_encode, size_t& outsize) const;
 
   mutable std::string cached_byte_string;
+  mutable std::string cached_byte_string_UTF_32;
   mutable std::wstring cached_wide_string;
   mutable unicode_string cached_unicode_string;
 };

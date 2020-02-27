@@ -40,7 +40,7 @@ const symbol& text::operator[](int index) const
   if (cached_unicode_string.size() <= 0)
   {
     if (cached_byte_string.size() <= 0)
-      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
+      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32");
 
     cached_unicode_string.assign(cached_byte_string);
   }
@@ -53,7 +53,7 @@ symbol& text::operator[](int index)
   if (cached_unicode_string.size() <= 0)
   {
     if (cached_byte_string.size() <= 0)
-      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
+      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32LE");
 
     cached_unicode_string.assign(cached_byte_string);
   }
@@ -93,8 +93,8 @@ void text::_iconv(const char* instr, const char* in_encode, std::wstring& outstr
 void text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  size_t insize = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
-  size_t outsize = insize;
+  size_t insize = (wcslen(instr) + 1) * sizeof(wchar_t);
+  size_t outsize = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
   _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign(res);
   delete[] res;

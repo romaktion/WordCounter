@@ -29,9 +29,8 @@ wordcounter::wordcounter(const std::string& path)
   inf.close();
   l_buffer[lenght] = '\0';
 
-  /*auto test = new text(l_buffer);
-  auto ttt = (*test)[5];
-  delete test;*/
+  auto test = std::make_unique<text>(l_buffer);
+  auto ttt = (*test.get())[5];
 
   //convert
   auto wt = std::make_unique<text>(l_buffer);
