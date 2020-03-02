@@ -40,6 +40,27 @@ void unicode_string::assign(const std::string& instr)
 	assign(instr.c_str());
 }
 
+void unicode_string::assign(const wchar_t* instr)
+{
+	switch (sizeof(wchar_t))
+	{
+	case 1:
+		assign((const char*)instr);
+		break;
+	case 2:
+		return "UTF-16LE";
+	case 4:
+		return "UTF-32LE";
+	default:
+		return "";
+	}
+}
+
+void unicode_string::assign(const std::wstring& instr)
+{
+	assign(instr.c_str());
+}
+
 void unicode_string::clear()
 {
 	_symbols.clear();

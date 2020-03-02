@@ -16,11 +16,13 @@ struct unicode_string
 public:
 	void assign(const char* instr);
 	void assign(const std::string& instr);
+	void assign(const wchar_t* instr);
+	void assign(const std::wstring& instr);
 	void clear();
 	size_t size() const;
 
 	symbol& operator [] (int index);
 	const symbol& operator [] (int index) const;
 private:
-	std::vector<int32_t> _symbols;
+	std::basic_string<symbol> _symbols;
 };

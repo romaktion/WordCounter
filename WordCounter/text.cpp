@@ -16,7 +16,7 @@ text::text(const wchar_t* wide_string)
 
 text::text(const char* byte_string)
 {
-  _iconv(byte_string, "", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
+  _iconv(byte_string, "CHAR", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
 }
 
 const std::wstring& text::wide_string() const
@@ -52,10 +52,10 @@ symbol& text::operator[](int index)
 {
   if (cached_unicode_string.size() <= 0)
   {
-    if (cached_byte_string.size() <= 0)
+    if (cached_byte_string_UTF_32.size() <= 0)
       _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32LE");
-
-    cached_unicode_string.assign(cached_byte_string);
+    
+    cached_unicode_string.assign(cached_byte_string_UTF_32);
   }
   
   return cached_unicode_string[index];
@@ -115,7 +115,7 @@ void text::_iconv_internal(const char* instr, const char* in_encode, size_t& ins
   auto result = new char[outsize];
 
 #ifdef __linux__
-  auto inptr = (char*)bytestr;
+  auto inptr = (char*)instr;
 #elif _WIN32
   auto inptr = (const char*)instr;
 #else
