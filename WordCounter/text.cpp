@@ -39,10 +39,12 @@ const symbol& text::operator[](int index) const
 {
   if (cached_unicode_string.size() <= 0)
   {
-    if (cached_byte_string.size() <= 0)
-      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32");
+    size_t size = 0;
 
-    cached_unicode_string.assign(cached_byte_string);
+    if (cached_byte_string.size() <= 0)
+      size = _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32");
+
+    cached_unicode_string.assign(cached_byte_string, size);
   }
   
   return cached_unicode_string[index];
@@ -52,10 +54,12 @@ symbol& text::operator[](int index)
 {
   if (cached_unicode_string.size() <= 0)
   {
+    size_t size = 0;
+
     if (cached_byte_string_UTF_32.size() <= 0)
-      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32LE");
+      size = _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32LE");
     
-    cached_unicode_string.assign(cached_byte_string_UTF_32);
+    cached_unicode_string.assign(cached_byte_string_UTF_32, size);
   }
   
   return cached_unicode_string[index];
