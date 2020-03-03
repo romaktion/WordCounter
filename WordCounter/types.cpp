@@ -21,7 +21,7 @@ symbol const& unicode_string::operator[](int index) const
 	return _symbols[index];
 }
 
-void unicode_string::assign(const char* instr)
+void unicode_string::assign(const char* instr, size_t insize)
 {
 	_symbols.clear();
 	size_t size = strlen(instr) + 1;
@@ -35,30 +35,29 @@ void unicode_string::assign(const char* instr)
 	}
 }
 
-void unicode_string::assign(const std::string& instr)
+void unicode_string::assign(const std::string& instr, size_t insize)
 {
-	assign(instr.c_str());
+	assign(instr.c_str(), insize);
 }
 
-void unicode_string::assign(const wchar_t* instr)
+void unicode_string::assign(const wchar_t* instr, size_t insize)
 {
 	switch (sizeof(wchar_t))
 	{
 	case 1:
-		assign((const char*)instr);
 		break;
 	case 2:
-		return "UTF-16LE";
+		break;
 	case 4:
-		return "UTF-32LE";
+		break;
 	default:
-		return "";
+		break;
 	}
 }
 
-void unicode_string::assign(const std::wstring& instr)
+void unicode_string::assign(const std::wstring& instr, size_t insize)
 {
-	assign(instr.c_str());
+	assign(instr.c_str(), insize);
 }
 
 void unicode_string::clear()

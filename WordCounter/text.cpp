@@ -70,49 +70,57 @@ text* text::text::operator->()
   return this;
 }
 
-void text::_iconv(const char* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
+size_t text::_iconv(const char* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
 {
   char* res = nullptr;
   size_t insize = strlen(instr) + 1;
   size_t outsize = insize * UTF8_SEQUENCE_MAXLEN;
-  _iconv_internal(instr, in_encode, insize, &res, out_encode, outsize);
+  const auto ret = _iconv_internal(instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign(res);
   delete[] res;
+  return ret;
 }
 
-void text::_iconv(const char* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const
+size_t text::_iconv(const char* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const
 {
   char* res = nullptr;
   size_t insize = strlen(instr) + 1;
   size_t outsize = insize * UTF8_SEQUENCE_MAXLEN;
-  _iconv_internal(instr, in_encode, insize, &res, out_encode, outsize);
+  const auto ret =_iconv_internal(instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign((wchar_t*)res);
   delete[] res;
+  return ret;
 }
 
-void text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
+size_t text::_iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  size_t insize = (wcslen(instr) + 1) * sizeof(wchar_t);
-  size_t outsize = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
-  _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
+  const size_t wlen = (wcslen(instr) + 1);
+  size_t insize = wlen * sizeof(wchar_t);
+  size_t outsize = wlen * UTF8_SEQUENCE_MAXLEN;
+  const auto ret = _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign(res);
   delete[] res;
+  return ret;
 }
 
-void text::_iconv(const wchar_t* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const
+size_t text::_iconv(const wchar_t* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const
 {
   char* res = nullptr;
-  size_t insize = (wcslen(instr) + 1) * UTF8_SEQUENCE_MAXLEN;
-  size_t outsize = insize;
-  _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
+  const size_t wlen = (wcslen(instr) + 1);
+  size_t insize = wlen * sizeof(wchar_t);
+  size_t outsize = wlen * UTF8_SEQUENCE_MAXLEN;
+  const auto ret = _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign((wchar_t*)res);
   delete[] res;
+  return ret;
 }
 
-void text::_iconv_internal(const char* instr, const char* in_encode, size_t& insize, char** outstr, const char* out_encode, size_t& outsize) const
+size_t text::_iconv_internal(const char* instr, const char* in_encode, size_t& insize, char** outstr, const char* out_encode, size_t& outsize) const
 {
   auto result = new char[outsize];
+
+  const size_t outsize_saved = outsize;
 
 #ifdef __linux__
   auto inptr = (char*)instr;
@@ -139,4 +147,6 @@ void text::_iconv_internal(const char* instr, const char* in_encode, size_t& ins
   iconv_close(cd);
 
   *outstr = result;
+
+  return outsize_saved - outsize;
 }

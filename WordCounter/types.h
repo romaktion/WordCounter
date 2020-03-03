@@ -14,10 +14,10 @@ struct parse_result
 struct unicode_string
 {
 public:
-	void assign(const char* instr);
-	void assign(const std::string& instr);
-	void assign(const wchar_t* instr);
-	void assign(const std::wstring& instr);
+	void assign(const char* instr, size_t insize);
+	void assign(const std::string& instr, size_t insize);
+	void assign(const wchar_t* instr, size_t insize);
+	void assign(const std::wstring& instr, size_t insize);
 	void clear();
 	size_t size() const;
 
