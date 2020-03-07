@@ -1,3 +1,3 @@
 # WordCounter
 Cross platform unicode multithread word counter.
-For windows libiconv look in libiconv repositoty: https://github.com/romaktion/libiconv.
+Look to the libiconv repository for windows libiconv: https://github.com/romaktion/libiconv.
