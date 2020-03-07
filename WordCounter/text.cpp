@@ -19,6 +19,11 @@ text::text(const char* byte_string)
   _iconv(byte_string, "CHAR", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
 }
 
+text::~text()
+{
+  delete[] cached_byte_string_UTF_32;
+}
+
 const std::wstring& text::wide_string() const
 {
   if (cached_wide_string.empty() && !cached_byte_string.empty())
@@ -35,29 +40,14 @@ const std::string& text::byte_string() const
   return cached_byte_string;
 }
 
-const symbol& text::operator[](int index) const
-{
-  if (cached_unicode_string.size() <= 0)
-  {
-    size_t size = 0;
-
-    if (cached_byte_string.size() <= 0)
-      size = _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32");
-
-    cached_unicode_string.assign(cached_byte_string, size);
-  }
-  
-  return cached_unicode_string[index];
-}
-
 symbol& text::operator[](int index)
 {
   if (cached_unicode_string.size() <= 0)
   {
     size_t size = 0;
 
-    if (cached_byte_string_UTF_32.size() <= 0)
-      size = _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string_UTF_32, "UTF-32LE");
+    if (!cached_byte_string_UTF_32)
+      size = _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, &cached_byte_string_UTF_32, "UTF-32BE");
     
     cached_unicode_string.assign(cached_byte_string_UTF_32, size);
   }
@@ -104,6 +94,19 @@ size_t text::_iconv(const wchar_t* instr, const char* in_encode, std::string& ou
   size_t outsize = wlen * UTF8_SEQUENCE_MAXLEN;
   const auto ret = _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
   outstr.assign(res);
+  delete[] res;
+  return ret;
+}
+
+size_t text::_iconv(const wchar_t* instr, const char* in_encode, char** outstr, const char* out_encode) const
+{
+  char* res = nullptr;
+  const size_t wlen = (wcslen(instr) + 1);
+  size_t insize = wlen * sizeof(wchar_t);
+  size_t outsize = wlen * UTF8_SEQUENCE_MAXLEN;
+  const auto ret = _iconv_internal((const char*)instr, in_encode, insize, &res, out_encode, outsize);
+  *outstr = new char[ret];
+  strcpy_s(*outstr, ret, res);
   delete[] res;
   return ret;
 }

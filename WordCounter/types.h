@@ -24,5 +24,5 @@ public:
 	symbol& operator [] (int index);
 	const symbol& operator [] (int index) const;
 private:
-	std::basic_string<symbol> _symbols;
+	std::vector<symbol> _symbols;
 };

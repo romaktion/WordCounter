@@ -24,13 +24,13 @@ symbol const& unicode_string::operator[](int index) const
 void unicode_string::assign(const char* instr, size_t insize)
 {
 	_symbols.clear();
-	size_t size = strlen(instr) + 1;
-	_symbols.reserve(size / 4);
-	for (uint32_t i = 0; i < size; i += 4)
+	_symbols.reserve(insize / 4);
+	for (uint32_t i = 0; i < insize; i += 4)
 	{
-		symbol s0 = instr[i + 0], s1 = instr[i + 1], s2 = instr[i + 2], s3 = instr[i + 3];
-		symbol val = s0 | (s1 << 8) | (s2 << 16) << (s3 << 24);
+		int32_t c0 = instr[i + 3], c1 = instr[i + 1], c2 = instr[i + 2], c3 = instr[i + 3];
+		int32_t val = c0 | (c1 << 8) | (c2 << 16) | (c3 << 24);
 
+		printf("%d\n", val);
 		_symbols.push_back(val);
 	}
 }
