@@ -12,18 +12,6 @@ int main(int argc, char* argv[], char* envp[])
 
   setlocale(LC_ALL, "");
 
-  /*auto t = std::make_unique<text>(L"Привет от юникода1!");
-  auto r = t->byte_string();
-
-  std::cout << r << '\n';
-
-  auto t2 = std::make_unique<text>("Привет от юникода2!", "UTF-8");
-  auto r2 = t2->byte_string();
-
-  std::cout << r2 << '\n';
-
-  return 0;*/
-
   std::cout << "main thread start id: " << std::this_thread::get_id() << '\n';
 
   auto init_path = [&argc, &argv]()
@@ -52,7 +40,7 @@ int main(int argc, char* argv[], char* envp[])
     }
     else
     {
-      std::cout << "First param [path to file] is missing! Using test.txt" << '\n';
+      std::cout << "Params are empty (path to in/out file)! Using test.txt and out.txt" << '\n';
 
       in = "test.txt";
       out = "out.txt";
@@ -66,7 +54,10 @@ int main(int argc, char* argv[], char* envp[])
   std::wifstream inf(in_path);
 
   if (!inf.is_open())
+  {
+    std::cerr << "Can't open input file!\n";
     return 1;
+  }
   else
     inf.close();
 
@@ -74,6 +65,7 @@ int main(int argc, char* argv[], char* envp[])
 
   if (!of.is_open())
   {
+    std::cerr << "Can't open output file!\n";
     inf.close();
     return 1;
   }

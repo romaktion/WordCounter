@@ -66,7 +66,7 @@ const char32_t& text::operator[](int index) const
 
 char32_t& text::operator[](int index)
 {
-  return (char32_t)unicode_string()[index];
+  return const_cast<char32_t&>(unicode_string()[index]);
 }
 
 text* text::text::operator->()
@@ -182,7 +182,7 @@ void text::convert_utf16_to_utf32(const wchar_t* instr, std::u32string& outstr) 
         std::cerr << "ERROR!\n";
     }
   }
-  ++output = U'\0';
+  *(++output) = U'\0';
 
   cached_unicode_string.assign(result);
 
