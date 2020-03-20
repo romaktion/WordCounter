@@ -16,13 +16,17 @@ void timing::start()
   gettimeofday(&timeval_start, nullptr);
 }
 
-long timing::get()
+double timing::get()
 {
   timeval current;
   gettimeofday(&current, nullptr);
 
-  return (((current.tv_sec - timeval_start.tv_sec) * 1000000L
-    + current.tv_usec) - timeval_start.tv_usec);
+  auto res = ((current.tv_sec - timeval_start.tv_sec) * 1000000L
+    + current.tv_usec) - timeval_start.tv_usec;
+
+  static const long divider = 1000000L;  
+
+  return res / divider + (double)(res % divider) / divider;
 }
 
 #ifdef _WIN32

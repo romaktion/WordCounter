@@ -17,7 +17,7 @@ public:
   ~timing();
 
   void start();
-  long get();
+  double get();
 
 private:
   timeval timeval_start;
