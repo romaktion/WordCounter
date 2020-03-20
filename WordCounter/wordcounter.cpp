@@ -10,7 +10,10 @@ wordcounter::wordcounter(const std::string& path)
   //open
   std::ifstream inf(path, std::ios::binary);
   if (!inf.is_open())
+  {
+    std::cerr << "WordCounter: can't open input file!\n";
     return;
+  }
 
   //calc lenght
   inf.seekg(0, std::ios::end);
@@ -32,19 +35,19 @@ wordcounter::wordcounter(const std::string& path)
   //convert
   auto wt = std::make_unique<text>(l_buffer);
   delete[] l_buffer;
-  _buffer = (wchar_t*)wt->wide_string().c_str();
+  _buffer = wt->wide_string().c_str();
   const size_t wlenght = wcslen(_buffer) + UTF8_SEQUENCE_MAXLEN;
 
   //tune
   _threads.reserve(_threads_amount);
-  std::vector<wchar_t*> buffers;
+  std::vector<const wchar_t*> buffers;
   buffers.reserve(_threads_amount);
 
   auto beg = _buffer;
   const wchar_t* const end = beg + wlenght;
   auto pch = beg + part;
 
-  auto push_back = [&buffers](wchar_t* str) { buffers.push_back(str); };
+  auto push_back = [&buffers](const wchar_t* str) { buffers.push_back(str); };
 
   for (unsigned i = 0; i < _threads_amount; i++)
   {
@@ -57,7 +60,10 @@ wordcounter::wordcounter(const std::string& path)
       break;
     }
 
-    *pch = '\0';
+    //modify one char in source string!
+    auto m_pch = (wchar_t*)pch;
+    *m_pch = '\0';
+
     push_back(beg);
 
     if (!(pch + 1 + part))
@@ -82,7 +88,7 @@ wordcounter::wordcounter(const std::string& path)
     }
   }
 
-  //launch
+  //launch workers
   for (auto& b : buffers)
     if (b)
     {
@@ -102,7 +108,7 @@ wordcounter::~wordcounter()
       t.join();
 }
 
-const parse_result wordcounter::get() const
+const parse_result& wordcounter::get() const
 {
   return _parse_result;
 }
@@ -119,11 +125,12 @@ void wordcounter::proceed()
   _cond.notify_all();
 }
 
-void wordcounter::worker(wchar_t* buffer)
+void wordcounter::worker(const wchar_t* buffer)
 {
   auto timer = std::make_unique<timing>();
 
-  const auto& res = parse(buffer);
+  parse_result res;
+  parse(buffer, res);
 
   std::scoped_lock<std::mutex> lock(_micro_mutex);
 
@@ -139,32 +146,34 @@ void wordcounter::worker(wchar_t* buffer)
     proceed();
 }
 
-parse_result wordcounter::parse(wchar_t* buffer)
+void wordcounter::parse(const wchar_t* in_buffer, parse_result& out_parse_result)
 {
-  if (!buffer)
-    return {};
+  if (!in_buffer)
+  {
+    std::cerr << "Parse: buffer is NULL!\n";
+    return;
+  }
 
   auto prevois_is_alpha = false;
-  parse_result res;
 
-  const auto end_of_buffer = buffer + wcslen(buffer);
+  const auto end_of_buffer = in_buffer + wcslen(in_buffer);
 
-  while (buffer)
+  while (in_buffer)
   {
-    wchar_t* end_of_word = nullptr;
-    auto word = buffer;
+    const wchar_t* end_of_word = nullptr;
+    auto word = in_buffer;
 
-    buffer = wcspbrk(buffer, DELIMITER);
-    if (buffer)
+    in_buffer = wcspbrk(in_buffer, DELIMITER);
+    if (in_buffer)
     {
-      if (buffer - word < 1)
+      if (in_buffer - word < 1)
       {
-        buffer++;
+        in_buffer++;
         continue;
       }
 
-      end_of_word = buffer;
-      buffer++;
+      end_of_word = in_buffer;
+      in_buffer++;
     }
     else
     {
@@ -178,7 +187,7 @@ parse_result wordcounter::parse(wchar_t* buffer)
         //delete symbol condition
         if (*it != "'"[0] || !prevois_is_alpha || !iswalpha(*(it + 1)) || it == word)
         {
-          for (auto p = it; p < end_of_word; p++)
+          for (auto p = (wchar_t*)it; p < end_of_word; p++)
             *p = *(p + 1);
 
           it--;
@@ -192,37 +201,33 @@ parse_result wordcounter::parse(wchar_t* buffer)
         //separate word if two words detected in one word
         if (!prevois_is_alpha && it != word && *(it - 1) != "'"[0])
         {
-          insert_word_to_word_counter(res, std::wstring(word, it));
+          insert_word_to_word_counter(out_parse_result, std::wstring(word, it));
           word = it;
         }
-
         prevois_is_alpha = true;
       }
-
-      res.symbol_amount++;
+      out_parse_result.symbol_amount++;
     }
 
     if (word != end_of_word)
-      insert_word_to_word_counter(res, std::wstring(word, end_of_word));
+      insert_word_to_word_counter(out_parse_result, std::wstring(word, end_of_word));
   }
-
-  return res;
 }
 
-void wordcounter::insert_word_to_word_counter(parse_result& res, const std::wstring& in_word)
+void wordcounter::insert_word_to_word_counter(parse_result& out_res, const std::wstring& in_word)
 {
-  std::map<std::wstring, unsigned>::iterator it = res.words_amount.find(in_word);
-  if (it != res.words_amount.end())
+  std::map<std::wstring, unsigned>::iterator it = out_res.words_amount.find(in_word);
+  if (it != out_res.words_amount.end())
     it->second++;
   else
-    res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word, 1));
+    out_res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word, 1));
 }
 
-void wordcounter::insert_word_to_word_counter(parse_result& res, const std::map<std::wstring, unsigned>::const_iterator& in_word_counter)
+void wordcounter::insert_word_to_word_counter(parse_result& out_res, const std::map<std::wstring, unsigned>::const_iterator& in_word_counter)
 {
-  std::map<std::wstring, unsigned>::iterator it = res.words_amount.find(in_word_counter->first);
-  if (it != res.words_amount.end())
+  std::map<std::wstring, unsigned>::iterator it = out_res.words_amount.find(in_word_counter->first);
+  if (it != out_res.words_amount.end())
     it->second += in_word_counter->second;
   else
-    res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word_counter->first, in_word_counter->second));
+    out_res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word_counter->first, in_word_counter->second));
 }

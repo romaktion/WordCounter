@@ -28,6 +28,7 @@ private:
   size_t _iconv(const wchar_t* instr, const char* in_encode, std::string& outstr, const char* out_encode) const;
   size_t _iconv(const wchar_t* instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const;
   
+  //std::string overloads
   size_t _iconv(const std::string& instr, const char* in_encode, std::string& outstr, const char* out_encode) const {
     return _iconv(instr.c_str(), in_encode, outstr, out_encode); }
   size_t _iconv(const std::string& instr, const char* in_encode, std::wstring& outstr, const char* out_encode) const {

@@ -23,14 +23,14 @@ const std::string& text::byte_string() const
 
 const std::u32string& text::unicode_string() const
 {
-  switch (sizeof(wchar_t))
+  if (cached_unicode_string.empty())
   {
-  case 1:
-    //TODO UTF-8 to UTF-32
-    break;
-  case 2:
-    if (cached_unicode_string.empty())
+    switch (sizeof(wchar_t))
     {
+    case 1:
+      //TODO UTF-8 to UTF-32
+      break;
+    case 2:
       if (cached_wide_string.empty())
         if (!cached_byte_string.empty())
           _iconv(cached_byte_string, "UTF-8", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
@@ -38,11 +38,8 @@ const std::u32string& text::unicode_string() const
           return cached_unicode_string;
 
       convert_utf16_to_utf32(cached_wide_string, cached_unicode_string);
-    }
-    break;
-  case 4:
-    if (cached_unicode_string.empty())
-    {
+      break;
+    case 4:
       if (cached_wide_string.empty())
         if (!cached_byte_string.empty())
           _iconv(cached_byte_string, "UTF-8", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
@@ -50,10 +47,10 @@ const std::u32string& text::unicode_string() const
           return cached_unicode_string;
 
       cached_unicode_string.assign((char32_t*)cached_wide_string.c_str());
+      break;
+    default:
+      break;
     }
-    break;
-  default:
-    break;
   }
 
   return cached_unicode_string;

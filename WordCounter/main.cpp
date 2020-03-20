@@ -6,6 +6,41 @@
 #include <codecvt>
 
 
+std::pair<std::string, std::string> init_path(const int& argc, char** argv)
+{
+  std::string in = "";
+  std::string out = "";
+
+  if (argc > 1)
+  {
+    for (int i = 0; i < argc; i++)
+    {
+      std::string str = argv[i];
+
+      if (str == "/i" && argc > i)
+        in = argv[i + 1];
+
+      if (str == "/o" && argc > i)
+        out = argv[i + 1];
+    }
+
+    if (in.length() <= 0)
+      in = "test.txt";
+
+    if (out.length() <= 0)
+      out = "out.txt";
+  }
+  else
+  {
+    std::cout << "Params are empty (path to in/out file)! Using test.txt and out.txt" << '\n';
+
+    in = "test.txt";
+    out = "out.txt";
+  }
+
+  return std::make_pair(in, out);
+}
+
 int main(int argc, char* argv[], char* envp[])
 {
   auto timer = std::make_unique<timing>();
@@ -14,42 +49,7 @@ int main(int argc, char* argv[], char* envp[])
 
   std::cout << "main thread start id: " << std::this_thread::get_id() << '\n';
 
-  auto init_path = [&argc, &argv]()
-  {
-    std::string in = "";
-    std::string out = "";
-
-    if (argc > 1)
-    {
-      for (int i = 0; i < argc; i++)
-      {
-        std::string str = argv[i];
-
-        if (str == "/i" && argc > i)
-          in = argv[i + 1];
-
-        if (str == "/o" && argc > i)
-          out = argv[i + 1];
-      }
-
-      if (in.length() <= 0)
-        in = "test.txt";
-
-      if (out.length() <= 0)
-        out = "out.txt";
-    }
-    else
-    {
-      std::cout << "Params are empty (path to in/out file)! Using test.txt and out.txt" << '\n';
-
-      in = "test.txt";
-      out = "out.txt";
-    }
-
-    return std::make_pair(in, out);
-  };
-
-  const auto [in_path, out_path] = init_path();
+  const auto [in_path, out_path] = init_path(argc, argv);
 
   std::wifstream inf(in_path);
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[], char* envp[])
 
   std::cout << "input file: " << in_path << '\n';
 
-  const auto res = await([=]
+  const auto res = await([&in_path]
     {
       auto queue = std::make_unique<wordcounter>(in_path);
       return queue->get();
