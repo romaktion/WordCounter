@@ -47,10 +47,10 @@ private:
   void convert_utf16_to_utf32(const std::wstring& instr, std::u32string& outstr) const {
     convert_utf16_to_utf32(instr.c_str(), outstr);}
 
-  bool is_surrogate(wchar_t uc) const { return (uc - 0xd800u) < 2048u; }
-  bool is_high_surrogate(wchar_t uc) const { return (uc & 0xfffffc00) == 0xd800; }
-  bool is_low_surrogate(wchar_t uc) const { return (uc & 0xfffffc00) == 0xdc00; }
-  char32_t surrogate_to_utf32(wchar_t high, wchar_t low) const { return (high << 10) + low - 0x35fdc00; }
+  bool is_surrogate(const wchar_t& uc) const { return (uc - 0xd800u) < 2048u; }
+  bool is_high_surrogate(const wchar_t& uc) const { return (uc & 0xfffffc00) == 0xd800; }
+  bool is_low_surrogate(const wchar_t& uc) const { return (uc & 0xfffffc00) == 0xdc00; }
+  char32_t surrogate_to_utf32(const wchar_t& high, const wchar_t& low) const { return (high << 10) + low - 0x35fdc00; }
 
   //cached strings
   mutable std::string cached_byte_string;
