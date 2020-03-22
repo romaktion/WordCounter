@@ -5,18 +5,50 @@
 #include <signal.h>
 
 
+text::text(const char* byte_string, const std::string& encoding)
+{
+  assign(byte_string, encoding);
+}
+
+text::text(const wchar_t* wide_string)
+{
+  assign(wide_string);
+}
+
+void text::assign(const char* byte_string, const std::string& encoding)
+{
+  if (encoding == "UTF-8")
+    cached_byte_string.assign(byte_string);
+  else
+  {
+    init_byte_encoding = encoding;
+    init_byte_string.assign(byte_string);
+  }
+}
+
+void text::assign(const wchar_t* wide_string)
+{
+  cached_wide_string.assign(wide_string);
+}
+
 const std::wstring& text::wide_string() const
 {
-  if (cached_wide_string.empty() && !cached_byte_string.empty())
-    _iconv(cached_byte_string.c_str(), "", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
+  if (cached_wide_string.empty())
+    if (!cached_byte_string.empty())
+      _iconv(cached_byte_string.c_str(), "UTF-8", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
+    else if (!init_byte_string.empty())
+      _iconv(init_byte_string, init_byte_encoding.c_str(), cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
 
   return cached_wide_string;
 }
 
 const std::string& text::byte_string() const
 {
-  if (cached_byte_string.empty() && !cached_wide_string.empty())
-    _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
+  if (cached_byte_string.empty())
+    if (!cached_wide_string.empty())
+      _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
+    else if (!init_byte_string.empty())
+      _iconv(init_byte_string, init_byte_encoding.c_str(), cached_byte_string, "UTF-8");
 
   return cached_byte_string;
 }
@@ -31,22 +63,10 @@ const std::u32string& text::unicode_string() const
       //TODO UTF-8 to UTF-32
       break;
     case 2:
-      if (cached_wide_string.empty())
-        if (!cached_byte_string.empty())
-          _iconv(cached_byte_string, "UTF-8", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
-        else
-          return cached_unicode_string;
-
-      convert_utf16_to_utf32(cached_wide_string, cached_unicode_string);
+      convert_utf16_to_utf32(wide_string(), cached_unicode_string);
       break;
     case 4:
-      if (cached_wide_string.empty())
-        if (!cached_byte_string.empty())
-          _iconv(cached_byte_string, "UTF-8", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
-        else
-          return cached_unicode_string;
-
-      cached_unicode_string.assign((char32_t*)cached_wide_string.c_str());
+      cached_unicode_string.assign((char32_t*)wide_string().c_str());
       break;
     default:
       break;
@@ -72,6 +92,9 @@ text* text::text::operator->()
   cached_wide_string.clear();
   cached_unicode_string.clear();
 
+  init_byte_encoding.clear();
+  init_byte_string.clear();
+  
   return this;
 }
 

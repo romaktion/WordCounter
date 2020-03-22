@@ -33,7 +33,7 @@ wordcounter::wordcounter(const std::string& path)
   l_buffer[lenght] = '\0';
 
   //convert
-  auto wt = std::make_unique<text>(l_buffer);
+  auto wt = std::make_unique<text>(l_buffer, "");
   delete[] l_buffer;
   _buffer = wt->wide_string().c_str();
   const size_t wlenght = wcslen(_buffer) + UTF8_SEQUENCE_MAXLEN;

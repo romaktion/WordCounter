@@ -4,12 +4,13 @@
 class text
 {
 public:
-  text(const char* byte_string, const char* encoding) {
-    _iconv(byte_string, encoding, cached_byte_string, "UTF-8"); }
-  text(const wchar_t* wide_string) {
-    _iconv(wide_string, WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8"); }
-  text(const char* byte_string) {
-    _iconv(byte_string, "CHAR", cached_wide_string, WCHAR_T_PLATFORM_ENCODING); }
+  text() {}
+  text(const char* byte_string, const std::string& encoding);
+  text(const wchar_t* wide_string);
+
+  //assign
+  void assign(const char* byte_string, const std::string& encoding);
+  void assign(const wchar_t* wide_string);
 
   //getters
   const std::wstring& wide_string() const;
@@ -56,4 +57,8 @@ private:
   mutable std::string cached_byte_string;
   mutable std::wstring cached_wide_string;
   mutable std::u32string cached_unicode_string;
+
+  //init data
+  std::string init_byte_string;
+  std::string init_byte_encoding;
 };
