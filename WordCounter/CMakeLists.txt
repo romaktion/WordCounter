@@ -16,35 +16,29 @@ if (WIN32)
     #grab libiconv
     ExternalProject_Add(libiconv_ext
         GIT_REPOSITORY          https://github.com/romaktion/libiconv.git
-        CONFIGURE_COMMAND       ""
-        BUILD_COMMAND           ""
-        INSTALL_COMMAND         ""
+        INSTALL_COMMAND         ${CMAKE_COMMAND} -E copy
+                                <BINARY_DIR>/libiconv.lib
+                                ${CMAKE_BINARY_DIR}/libiconv.lib
         UPDATE_COMMAND          ""
     )
 
-    #set dir
+    #set dirs
     ExternalProject_Get_Property(libiconv_ext SOURCE_DIR)
-    set(LIBICONV_DIR ${SOURCE_DIR})
-    include_directories(${LIBICONV_DIR}/include)
-
-    #create library
-    set(SOURCES 
-        ${LIBICONV_DIR}/libiconv/iconv.c
-        ${LIBICONV_DIR}/libiconv/localcharset.c
-        ${LIBICONV_DIR}/libiconv/relocatable.c
-        )
-    set_source_files_properties(${SOURCES} PROPERTIES GENERATED TRUE)
-    add_library(libiconv STATIC ${SOURCES})
-    add_dependencies(libiconv libiconv_ext)
-    target_include_directories(libiconv INTERFACE ${LIBICONV_DIR}/include)
-    
-    install(TARGETS libiconv
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
+    ExternalProject_Get_Property(libiconv_ext BINARY_DIR)
+    include_directories(${SOURCE_DIR}/include)
 
     #link libiconv to WordCounter
-    target_include_directories(WordCounter PRIVATE ${LIBICONV_DIR}/include)
-    target_link_libraries(WordCounter libiconv)
+    target_include_directories(WordCounter PRIVATE ${SOURCE_DIR}/include)
+    target_link_libraries(WordCounter PRIVATE libiconv)
+    add_dependencies(WordCounter libiconv_ext)
+
+    #copy libiconv binaries
+    add_custom_command(TARGET WordCounter POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/libiconv.dll ${CMAKE_CURRENT_BINARY_DIR}/libiconv.dll)
+    add_custom_command(TARGET WordCounter POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/libiconv.pdb ${CMAKE_CURRENT_BINARY_DIR}/libiconv.pdb)
+    add_custom_command(TARGET WordCounter POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/libiconv.ilk ${CMAKE_CURRENT_BINARY_DIR}/libiconv.ilk)
 
 elseif(UNIX)
     include(ExternalProject)
@@ -61,8 +55,7 @@ elseif(UNIX)
     target_link_libraries(WordCounter PRIVATE ${PREFIX}/lib/libiconv.so ${CMAKE_THREAD_LIBS_INIT})
 endif ()
 
-install(TARGETS WordCounter RUNTIME DESTINATION bin)
-
+#default input text file for test
 add_custom_command(TARGET WordCounter POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/test.txt ${CMAKE_CURRENT_BINARY_DIR}
 )
