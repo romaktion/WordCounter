@@ -45,14 +45,23 @@ elseif(UNIX)
 
     set(PREFIX /usr/local)
 
-	ExternalProject_Add(libiconv_linux
+    #grab libiconv
+	ExternalProject_Add(libiconv_ext
 	URL				   https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz
 	CONFIGURE_COMMAND  <SOURCE_DIR>/configure --prefix=${PREFIX}
 	BUILD_COMMAND	   make
-	INSTALL_COMMAND	   sudo make install
+	INSTALL_COMMAND	   ""#sudo make install
 	)
 
-    target_link_libraries(WordCounter PRIVATE ${PREFIX}/lib/libiconv.so ${CMAKE_THREAD_LIBS_INIT})
+    #set dirs
+    ExternalProject_Get_Property(libiconv_ext SOURCE_DIR)
+    ExternalProject_Get_Property(libiconv_ext BINARY_DIR)
+    include_directories(${SOURCE_DIR}/include)
+
+    #copy libiconv binaries
+    target_include_directories(WordCounter PRIVATE ${SOURCE_DIR}/include)
+    target_link_libraries(WordCounter PRIVATE ${BINARY_DIR}/lib/.libs/libiconv.so ${CMAKE_THREAD_LIBS_INIT})
+    add_dependencies(WordCounter libiconv_ext)
 endif ()
 
 #default input text file for test
