@@ -9,8 +9,17 @@
 #else
 #endif
 
+#ifdef libtiming_EXPORTS
+#define libtiming_API __declspec(dllexport)
+#else
+#define libtiming_API __declspec(dllimport)
+#endif
 
-class timing
+class
+#ifdef _WIN32
+  libtiming_API
+#endif
+  timing
 {
 public:
   timing();

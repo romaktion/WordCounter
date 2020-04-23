@@ -19,13 +19,5 @@
 #include <vector>
 #include <ctime>
 #include <algorithm>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include "wordcounter.h"
-#include "types.h"
-#include "await.h"
-#include "constants.h"
-#include "timing.h"
 
 #endif //PCH_H

@@ -1,7 +1,9 @@
 //WordCounter
 
 #include "pch.h"
-#include "text.h"
+#include "wordcounter.h"
+#include "await.h"
+#include "timing.h"
 #include <locale>
 #include <codecvt>
 
@@ -49,20 +51,20 @@ int main(int argc, char* argv[], char* envp[])
 
   std::cout << "main thread start id: " << std::this_thread::get_id() << '\n';
 
+  //open files
   const auto [in_path, out_path] = init_path(argc, argv);
 
   std::wifstream inf(in_path);
-
   if (!inf.is_open())
   {
     std::cerr << "Can't open input file!\n";
+    inf.close();
     return 1;
   }
   else
     inf.close();
 
   std::wofstream of(out_path, std::ios::binary);
-
   if (!of.is_open())
   {
     std::cerr << "Can't open output file!\n";
@@ -73,17 +75,19 @@ int main(int argc, char* argv[], char* envp[])
 
   std::cout << "input file: " << in_path << '\n';
 
+  //run wordcounter
   const auto res = await([&in_path]
     {
       auto queue = std::make_unique<wordcounter>(in_path);
       return queue->get();
     });
 
+  //write result
   for (const auto& r : res.words_amount)
     of << r.first << " - " << r.second << '\n';
-
   of.close();
 
+  //print
   std::cout << "output file: " << out_path << '\n';
   std::cout << "symbols amount: " << res.symbol_amount << '\n';
 

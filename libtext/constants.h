@@ -1,8 +1,5 @@
 #pragma once
 
-constexpr auto delimiter = L" \n\t";
-#define DELIMITER delimiter
-
 constexpr size_t utf8_sequence_maxlen = 6;
 #define UTF8_SEQUENCE_MAXLEN utf8_sequence_maxlen
 

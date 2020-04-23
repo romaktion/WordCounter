@@ -1,9 +1,15 @@
-#include "pch.h"
 #include "text.h"
 #include "iconv.h"
-#include <typeinfo>
+#include "constants.h"
 #include <signal.h>
+#include <iostream>
+#include "string.h"
 
+
+text::text()
+{
+
+}
 
 text::text(const char* byte_string, const std::string& encoding)
 {

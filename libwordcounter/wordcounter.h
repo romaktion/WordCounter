@@ -1,7 +1,44 @@
 #pragma once
-#include "types.h"
 
-class wordcounter
+#include <map>
+#include <vector>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
+#ifdef libwordcounter_EXPORTS
+#define libwordcounter_API __declspec(dllexport)
+#else
+#define libwordcounter_API __declspec(dllimport)
+#endif
+
+constexpr auto delimiter = L" \n\t";
+#define DELIMITER delimiter
+
+
+struct
+#ifdef _WIN32
+  libwordcounter_API
+#endif
+  parse_result
+{
+	unsigned symbol_amount = 0;
+	std::map<std::wstring, unsigned> words_amount;
+
+	parse_result() {}
+	parse_result(unsigned in_symbol_amount, std::map<std::wstring, unsigned> in_words_amount)
+	{
+		symbol_amount = in_symbol_amount;
+		words_amount = in_words_amount;
+	}
+};
+
+class
+#ifdef _WIN32
+   libwordcounter_API
+#endif
+  wordcounter
 {
 public:
   wordcounter(const std::string& path);

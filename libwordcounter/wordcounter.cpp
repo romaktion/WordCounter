@@ -1,6 +1,9 @@
-#include "pch.h"
 #include "wordcounter.h"
 #include "text.h"
+#include "constants.h"
+#include "timing.h"
+#include <iostream>
+#include <fstream>
 
 
 wordcounter::wordcounter(const std::string& path)

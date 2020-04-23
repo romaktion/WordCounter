@@ -1,10 +1,21 @@
 #pragma once
 
+#include <string>
 
-class text
+#ifdef libtext_EXPORTS
+#define libtext_API __declspec(dllexport)
+#else
+#define libtext_API __declspec(dllimport)
+#endif
+
+class
+#ifdef _WIN32
+  libtext_API
+#endif
+  text
 {
 public:
-  text() {}
+  text();
   text(const char* byte_string, const std::string& encoding);
   text(const wchar_t* wide_string);
 
