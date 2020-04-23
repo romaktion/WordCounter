@@ -1,6 +1,9 @@
 cmake_minimum_required (VERSION 3.15)
 
-include_directories(${CMAKE_SOURCE_DIR}/libtext ${CMAKE_SOURCE_DIR}/libtiming)
+get_target_property(LIBTEXT_SOURCE libtext SOURCE_DIR)
+get_target_property(LIBTIMING_SOURCE libtiming SOURCE_DIR)
+
+include_directories(${LIBTEXT_SOURCE} ${LIBTIMING_SOURCE})
 
 set(SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/wordcounter.cpp
@@ -8,8 +11,8 @@ set(SOURCES
 
 add_library(libwordcounter SHARED ${SOURCES})
 
-target_include_directories(libwordcounter PRIVATE ${CMAKE_SOURCE_DIR}/libtext)
+target_include_directories(libwordcounter PRIVATE ${LIBTEXT_SOURCE})
 target_link_libraries(libwordcounter PUBLIC libtext)
 
-target_include_directories(libwordcounter PRIVATE ${CMAKE_SOURCE_DIR}/libtiming)
+target_include_directories(libwordcounter PRIVATE ${LIBTIMING_SOURCE})
 target_link_libraries(libwordcounter PUBLIC libtiming)
