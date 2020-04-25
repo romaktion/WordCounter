@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.15)
 
 # Add source to this project's executable.
-find_package(Threads)
+
 add_executable(WordCounter main.cpp pch.cpp)
 
 get_target_property(LIBASYNC_SOURCE libasync SOURCE_DIR)
@@ -18,6 +18,7 @@ target_link_libraries(WordCounter PRIVATE libwordcounter libasync libtiming)
 
 # TODO: Add tests and install targets if needed.
 if(UNIX)
+    find_package(Threads)
     target_link_libraries(WordCounter PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 elseif(WIN32)
     #copy libs dlls

@@ -59,6 +59,6 @@ elseif(UNIX)
 
     #copy libiconv binaries
     target_include_directories(libtext PRIVATE ${SOURCE_DIR}/include)
-    target_link_libraries(libtext PRIVATE ${BINARY_DIR}/lib/.libs/libiconv.so ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(libtext PRIVATE ${BINARY_DIR}/lib/.libs/libiconv.so)
     add_dependencies(libtext libiconv_ext)
 endif ()
