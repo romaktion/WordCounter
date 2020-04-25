@@ -13,3 +13,16 @@ decltype(auto) __await_async(L lambda)
 	return f.get();
 }
 #define await(l) __await_async(l)
+
+#ifdef libasync_EXPORTS
+#define libasync_API __declspec(dllexport)
+#else
+#define libasync_API __declspec(dllimport)
+#endif
+
+class
+#ifdef _WIN32
+	libasync_API
+#endif
+	async
+{};
