@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.15)
+cmake_minimum_required (VERSION 3.10)
 
 get_target_property(LIBTEXT_SOURCE libtext SOURCE_DIR)
 get_target_property(LIBTIMING_SOURCE libtiming SOURCE_DIR)
