@@ -1,11 +1,15 @@
 ﻿# CMakeList.txt : CMake project for WordCounter, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.10)
+#cmake_minimum_required (VERSION 3.10)
 
 # Add source to this project's executable.
 
-add_executable(WordCounter main.cpp pch.cpp)
+if (ANDROID)
+    add_library(WordCounter native-lib.cpp pch.cpp)
+else()
+    add_executable(WordCounter main.cpp pch.cpp)
+endif()
 
 get_target_property(LIBASYNC_SOURCE libasync SOURCE_DIR)
 get_target_property(LIBTIMING_SOURCE libtiming SOURCE_DIR)
@@ -61,6 +65,9 @@ elseif(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy ${LIBWORDCOUNTER_BINARY}/libwordcounter.pdb ${CMAKE_CURRENT_BINARY_DIR}/libwordcounter.pdb)
     add_custom_command(TARGET WordCounter POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy ${LIBWORDCOUNTER_BINARY}/libwordcounter.ilk ${CMAKE_CURRENT_BINARY_DIR}/libwordcounter.ilk)
+elseif(ANDROID)
+    find_library(log-lib log)
+    target_link_libraries(WordCounter ${log-lib})
 endif ()
 
 #default input text file for test

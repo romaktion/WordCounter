@@ -1,7 +1,11 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required (VERSION 3.10)
+if (WIN32)
+	cmake_minimum_required (VERSION 3.15)
+else()
+	cmake_minimum_required (VERSION 3.10)
+endif()
 
 project ("WordCounter")
 set (CMAKE_CXX_STANDARD 17)
