@@ -6,7 +6,7 @@
 # Add source to this project's executable.
 
 if (ANDROID)
-    add_library(WordCounter native-lib.cpp pch.cpp)
+    add_library(WordCounter SHARED native-lib.cpp pch.cpp)
 else()
     add_executable(WordCounter main.cpp pch.cpp)
 endif()

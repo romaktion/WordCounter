@@ -40,10 +40,12 @@ void text::assign(const wchar_t* wide_string)
 const std::wstring& text::wide_string() const
 {
   if (cached_wide_string.empty())
+  {
     if (!cached_byte_string.empty())
       _iconv(cached_byte_string.c_str(), "UTF-8", cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
     else if (!init_byte_string.empty())
       _iconv(init_byte_string, init_byte_encoding.c_str(), cached_wide_string, WCHAR_T_PLATFORM_ENCODING);
+  }
 
   return cached_wide_string;
 }
@@ -51,10 +53,12 @@ const std::wstring& text::wide_string() const
 const std::string& text::byte_string() const
 {
   if (cached_byte_string.empty())
+  {
     if (!cached_wide_string.empty())
       _iconv(cached_wide_string.c_str(), WCHAR_T_PLATFORM_ENCODING, cached_byte_string, "UTF-8");
     else if (!init_byte_string.empty())
       _iconv(init_byte_string, init_byte_encoding.c_str(), cached_byte_string, "UTF-8");
+  }
 
   return cached_byte_string;
 }
@@ -170,18 +174,22 @@ size_t text::_iconv_internal(const char* instr, const char* in_encode, size_t& i
 
   auto cd = iconv_open(out_encode, in_encode);
   if (cd == (iconv_t)-1)
+  {
     if (errno == EINVAL)
       std::cerr << "conversion from " << in_encode << " to " << out_encode << " not available\n";
     else
       std::cerr << "iconv_open\n";
+  }
 
   auto outptr = result;
   auto nconv = iconv(cd, &inptr, &insize, &outptr, &outsize);
   if (nconv == (size_t)-1)
+  {
     if (errno == EINVAL)
       std::cerr << "This is harmless.\n";
     else
       std::cerr << "It is a real problem!\n";
+  }
 
   iconv_close(cd);
 
