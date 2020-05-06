@@ -52,23 +52,20 @@ elseif(ANDROID)
 elseif(UNIX)
     include(ExternalProject)
 
-    set(PREFIX /usr/local)
+    set(PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libiconv_install)
 
     #grab libiconv
 	ExternalProject_Add(libiconv_ext
 	URL				   https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz
 	CONFIGURE_COMMAND  <SOURCE_DIR>/configure --prefix=${PREFIX}
 	BUILD_COMMAND	   make
-	INSTALL_COMMAND	   ""#sudo make install
+	INSTALL_COMMAND	   make install
 	)
 
-    #set dirs
-    ExternalProject_Get_Property(libiconv_ext SOURCE_DIR)
-    ExternalProject_Get_Property(libiconv_ext BINARY_DIR)
-    include_directories(${SOURCE_DIR}/include)
+    include_directories(${PREFIX}/include)
 
-    #copy libiconv binaries
+    #link libiconv binaries
     target_include_directories(libtext PRIVATE ${SOURCE_DIR}/include)
-    target_link_libraries(libtext PRIVATE ${BINARY_DIR}/lib/.libs/libiconv.so)
+    target_link_libraries(libtext PRIVATE ${PREFIX}/lib/libiconv.so)
     add_dependencies(libtext libiconv_ext)
 endif ()
