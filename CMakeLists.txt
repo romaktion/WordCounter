@@ -16,4 +16,6 @@ add_subdirectory ("libtiming")
 add_subdirectory ("libwordcounter")
 
 #exec
-add_subdirectory ("WordCounter")
+if (NOT ANDROID)
+	add_subdirectory ("WordCounter")
+endif
