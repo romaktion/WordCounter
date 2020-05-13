@@ -11,8 +11,5 @@ set(SOURCES
 
 add_library(libwordcounter SHARED ${SOURCES})
 
-target_include_directories(libwordcounter PRIVATE ${LIBTEXT_SOURCE})
-target_link_libraries(libwordcounter PUBLIC libtext)
-
-target_include_directories(libwordcounter PRIVATE ${LIBTIMING_SOURCE})
-target_link_libraries(libwordcounter PUBLIC libtiming)
+target_include_directories(libwordcounter PRIVATE ${LIBTEXT_SOURCE} ${LIBTIMING_SOURCE})
+target_link_libraries(libwordcounter PUBLIC libtext libtiming)
