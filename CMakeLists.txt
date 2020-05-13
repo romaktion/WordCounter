@@ -18,4 +18,4 @@ add_subdirectory ("libwordcounter")
 #exec
 if (NOT ANDROID)
 	add_subdirectory ("WordCounter")
-endif
+endif()
