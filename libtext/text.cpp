@@ -69,10 +69,10 @@ const std::u32string& text::unicode_string() const
   {
     switch (sizeof(wchar_t))
     {
-    case 1:
-      //TODO UTF-8 to UTF-32
+    case 1://TODO: optimiztionб select an existing string as source for convertation
+      convert_utf16_to_utf32(wide_string(), cached_unicode_string);
       break;
-    case 2:
+    case 2://TODO: optimiztionб select an existing string as source for convertation
       convert_utf16_to_utf32(wide_string(), cached_unicode_string);
       break;
     case 4:
