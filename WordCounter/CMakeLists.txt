@@ -5,7 +5,14 @@
 
 # Add source to this project's executable.
 
-add_executable(WordCounter main.cpp pch.cpp)
+#for QT
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
+add_executable(WordCounter WIN32 main.cpp pch.cpp "QtWindow.cpp")
 
 get_target_property(LIBASYNC_SOURCE libasync SOURCE_DIR)
 get_target_property(LIBTIMING_SOURCE libtiming SOURCE_DIR)
@@ -14,7 +21,7 @@ get_target_property(LIBWORDCOUNTER_SOURCE libwordcounter SOURCE_DIR)
 include_directories(${LIBASYNC_SOURCE} ${LIBWORDCOUNTER_SOURCE} ${LIBTIMING_SOURCE})
 
 target_include_directories(WordCounter PRIVATE ${LIBWORDCOUNTER_SOURCE})
-target_link_libraries(WordCounter PRIVATE libwordcounter libasync libtiming)
+target_link_libraries(WordCounter PRIVATE libwordcounter libasync libtiming Qt5::Widgets)
 
 # TODO: Add tests and install targets if needed.
 if(UNIX)

@@ -6,6 +6,8 @@
 #include "timing.h"
 #include <locale>
 #include <codecvt>
+#include <QtWidgets/QApplication>
+#include "QtWindow.h"
 
 
 std::pair<std::string, std::string> init_path(const int& argc, char** argv)
@@ -45,6 +47,12 @@ std::pair<std::string, std::string> init_path(const int& argc, char** argv)
 
 int main(int argc, char* argv[], char* envp[])
 {
+  QApplication a(argc, argv);
+  QtWindow w;
+  w.setWindowTitle("Hello from QT!");
+  w.show();
+  return a.exec();
+
   auto timer = std::make_unique<timing>();
 
   setlocale(LC_ALL, "");
