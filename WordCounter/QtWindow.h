@@ -12,6 +12,5 @@ public:
   QtWindow(QWidget* parent = Q_NULLPTR);
 
 private:
-  QLabel* label = nullptr;
-  Ui::QtWidgetsApplication1Class ui;
+  Ui::QtWindowClass ui;
 };
