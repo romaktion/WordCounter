@@ -13,4 +13,7 @@ public:
 
 private:
   Ui::QtWindowClass ui;
+
+private slots:
+  void pushButtonHandle();
 };

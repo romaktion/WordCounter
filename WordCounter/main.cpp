@@ -49,7 +49,7 @@ int main(int argc, char* argv[], char* envp[])
 {
   QApplication a(argc, argv);
   QtWindow w;
-  w.setWindowTitle("Hello from QT!");
+  w.setWindowTitle("Word Counter");
   w.show();
   return a.exec();
 
