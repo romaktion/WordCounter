@@ -63,5 +63,4 @@ private:
   parse_result _parse_result;
   const unsigned _threads_amount = std::thread::hardware_concurrency() > 0
     ? std::thread::hardware_concurrency() : 1;
-  const wchar_t* _buffer = nullptr;
 };

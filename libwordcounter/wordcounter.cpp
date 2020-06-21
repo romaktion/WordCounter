@@ -38,15 +38,14 @@ wordcounter::wordcounter(const std::string& path)
   //convert
   auto wt = std::make_unique<text>(l_buffer, "");
   delete[] l_buffer;
-  _buffer = wt->wide_string().c_str();
-  const size_t wlenght = wcslen(_buffer) + UTF8_SEQUENCE_MAXLEN;
 
   //tune
   _threads.reserve(_threads_amount);
   std::vector<const wchar_t*> buffers;
   buffers.reserve(_threads_amount);
 
-  auto beg = _buffer;
+  auto beg = wt->wide_string().c_str();
+  const size_t wlenght = wcslen(beg) + UTF8_SEQUENCE_MAXLEN;
   const wchar_t* const end = beg + wlenght;
   auto pch = beg + part;
 
