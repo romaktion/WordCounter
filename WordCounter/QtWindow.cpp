@@ -17,6 +17,12 @@ void QtWindow::pushButtonHandle()
 {
   auto filePath = QFileDialog::getOpenFileName(this, tr("Open source text file"), "c:/", tr("Text Files (*.txt)"));
 
+  if (filePath.isEmpty())
+  {
+    ui.label->setText("No file selected!");
+    return;
+  }
+  
   ui.label->setText("...");
 
   auto res = await([&filePath]()

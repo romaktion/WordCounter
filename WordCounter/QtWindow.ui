@@ -28,7 +28,7 @@
     </property>
     <property name="font">
      <font>
-      <pointsize>25</pointsize>
+      <pointsize>20</pointsize>
      </font>
     </property>
     <property name="autoFillBackground">
