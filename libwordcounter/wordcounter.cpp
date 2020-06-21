@@ -49,15 +49,12 @@ wordcounter::wordcounter(const std::string& path)
   const wchar_t* const end = beg + wlenght;
   auto pch = beg + part;
 
-  auto push_back = [&buffers](const wchar_t* str) { buffers.push_back(str); };
-
   for (unsigned i = 0; i < _threads_amount; i++)
   {
     pch = wcspbrk(pch, DELIMITER);
     if (!pch)
     {
-      if (beg)
-        push_back(beg);
+      if (beg) buffers.push_back(beg);
 
       break;
     }
@@ -66,14 +63,13 @@ wordcounter::wordcounter(const std::string& path)
     auto m_pch = (wchar_t*)pch;
     *m_pch = '\0';
 
-    push_back(beg);
+    buffers.push_back(beg);
 
     if (!(pch + 1 + part))
     {
       beg = pch + 1;
 
-      if (beg)
-        push_back(beg);
+      if (beg) buffers.push_back(beg);
 
       break;
     }
@@ -83,8 +79,7 @@ wordcounter::wordcounter(const std::string& path)
 
     if (pch >= end)
     {
-      if (beg)
-        push_back(beg);
+      if (beg) buffers.push_back(beg);
 
       break;
     }
