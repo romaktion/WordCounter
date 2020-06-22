@@ -10,7 +10,6 @@ set (CMAKE_CXX_STANDARD 17)
 # Include sub-projects.
 
 #libs
-add_subdirectory ("libasync")
 add_subdirectory ("libtext")
 add_subdirectory ("libtiming")
 add_subdirectory ("libwordcounter")

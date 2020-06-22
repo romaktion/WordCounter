@@ -19,12 +19,11 @@ class text;
 constexpr auto delimiter = L" \n\t";
 #define DELIMITER delimiter
 
-
 struct
 #ifdef _WIN32
   libwordcounter_API
 #endif
-  parse_result
+  parse_result final
 {
 	unsigned symbol_amount = 0;
 	std::map<std::wstring, unsigned> words_amount;
@@ -41,13 +40,13 @@ class
 #ifdef _WIN32
    libwordcounter_API
 #endif
-  wordcounter
+  wordcounter final
 {
   using success_fn = std::function<void(const parse_result&)>;
   using failure_fn = std::function<void(const std::string&)>;
 
 public:
-  wordcounter(const std::string& path,
+  explicit wordcounter(const std::string& path,
     success_fn&& success_callback = nullptr,
     failure_fn&& failure_callback = nullptr);
 

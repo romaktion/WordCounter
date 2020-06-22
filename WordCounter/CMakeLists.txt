@@ -25,16 +25,15 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
-add_executable(WordCounter WIN32 main.cpp pch.cpp "QtWindow.cpp")
+add_executable(WordCounter WIN32 main.cpp "QtWindow.cpp")
 
-get_target_property(LIBASYNC_SOURCE libasync SOURCE_DIR)
 get_target_property(LIBTIMING_SOURCE libtiming SOURCE_DIR)
 get_target_property(LIBWORDCOUNTER_SOURCE libwordcounter SOURCE_DIR)
 
 include_directories(${LIBASYNC_SOURCE} ${LIBWORDCOUNTER_SOURCE} ${LIBTIMING_SOURCE})
 
 target_include_directories(WordCounter PRIVATE ${LIBWORDCOUNTER_SOURCE})
-target_link_libraries(WordCounter PRIVATE libwordcounter libasync libtiming Qt5::Core Qt5::Widgets)
+target_link_libraries(WordCounter PRIVATE libwordcounter libtiming Qt5::Core Qt5::Widgets)
 
 # TODO: Add tests and install targets if needed.
 if(UNIX)
@@ -42,17 +41,9 @@ if(UNIX)
     target_link_libraries(WordCounter PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 elseif(WIN32)
     #copy libs dlls
-    get_target_property(LIBASYNC_BINARY libasync BINARY_DIR)
     get_target_property(LIBTEXT_BINARY libtext BINARY_DIR)
     get_target_property(LIBTIMING_BINARY libtiming BINARY_DIR)
     get_target_property(LIBWORDCOUNTER_BINARY libwordcounter BINARY_DIR)
-
-    add_custom_command(TARGET WordCounter POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBASYNC_BINARY}/libasync.dll ${CMAKE_CURRENT_BINARY_DIR}/libasync.dll)
-    add_custom_command(TARGET WordCounter POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBASYNC_BINARY}/libasync.pdb ${CMAKE_CURRENT_BINARY_DIR}/libasync.pdb)
-    add_custom_command(TARGET WordCounter POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBASYNC_BINARY}/libasync.ilk ${CMAKE_CURRENT_BINARY_DIR}/libasync.ilk)
 
     add_custom_command(TARGET WordCounter POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy ${LIBTEXT_BINARY}/libtext.dll ${CMAKE_CURRENT_BINARY_DIR}/libtext.dll)

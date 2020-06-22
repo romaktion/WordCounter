@@ -1,11 +1,5 @@
 //WordCounter
 
-#include "pch.h"
-#include "wordcounter.h"
-#include "await.h"
-#include "timing.h"
-#include <locale>
-#include <codecvt>
 #include <QtWidgets/QApplication>
 #include "QtWindow.h"
 

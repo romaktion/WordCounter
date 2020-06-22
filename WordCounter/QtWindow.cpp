@@ -1,9 +1,8 @@
-#include "QtWindow.h"
-#include <QFileDialog>
-#include "await.h"
-#include "wordcounter.h"
 #include <fstream>
 #include <iostream>
+#include "QtWindow.h"
+#include <QFileDialog>
+#include "wordcounter.h"
 
 QtWindow::QtWindow(QWidget* parent)
   : QMainWindow(parent)
