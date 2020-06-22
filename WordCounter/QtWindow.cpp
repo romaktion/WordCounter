@@ -25,42 +25,40 @@ void QtWindow::pushButtonHandle()
   
   ui.label->setText("...");
 
-  std::thread([=]()
+  std::thread([&, filePath]
     {
-      std::make_unique<wordcounter>(filePath.toStdString(), [this](const parse_result& res)
-        {
-          ui.label->setText(QString::fromStdString(std::to_string(res.symbol_amount)));
-        }, [this](const std::string& error)
-        {
-          ui.label->setText(QString::fromStdString(error));
-        });
+      std::make_unique<wordcounter>(filePath.toStdString(),
+        [this](const parse_result& res) { OnSuccess(res); },
+        [this](const std::string error) { OnFailure(error); });
     }).detach();
+}
 
-  //auto res = await([&filePath]()
-  //  {
-  //    auto queue = std::make_unique<wordcounter>(filePath.toStdString());
+void QtWindow::OnSuccess(const parse_result& res)
+{
+  //open file to write
+  std::wofstream of("out.txt", std::ios::binary);
+  if (!of.is_open())
+  {
+    std::cerr << "Can't open output file!\n";
+    return;
+  }
+  of.imbue(std::locale(""));
 
-  //    return queue->get();
-  //  });
+  //write result
+  for (const auto& r : res.words_amount)
+    of << r.first << " - " << r.second << '\n';
+  of.close();
 
-  ////open file to write
-  //std::wofstream of("out.txt", std::ios::binary);
-  //if (!of.is_open())
-  //{
-  //  std::cerr << "Can't open output file!\n";
-  //  return;
-  //}
-  //of.imbue(std::locale(""));
+  //display result
+  auto wordcounter = 0u;
+  for (const auto& wc : res.words_amount)
+    wordcounter += wc.second;
 
-  ////write result
-  //for (const auto& r : res.words_amount)
-  //  of << r.first << " - " << r.second << '\n';
-  //of.close();
+  ui.label->setText("Words: " + QString::fromStdString(std::to_string(wordcounter))
+    + "\n Symbols: " + QString::fromStdString(std::to_string(res.symbol_amount)));
+}
 
-  //auto wordcounter = 0u;
-  //for (const auto& wc : res.words_amount)
-  //  wordcounter += wc.second;
-
-  //ui.label->setText("Words: " + QString::fromStdString(std::to_string(wordcounter))
-  //  + "\n Symbols: " + QString::fromStdString(std::to_string(res.symbol_amount)));
+void QtWindow::OnFailure(const std::string error)
+{
+  ui.label->setText(QString::fromStdString(error));
 }

@@ -35,7 +35,7 @@ wordcounter::wordcounter(const std::string& path, success_fn&& success_callback,
   auto buffers = chunking(path);
   if (buffers.empty())
   {
-    std::cerr << "WordCounter: prepare result is empty!\n";
+    failure_callback("WordCounter: prepare result is empty!\n");
 
     return;
   }
