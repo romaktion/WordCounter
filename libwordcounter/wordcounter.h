@@ -47,8 +47,9 @@ class
   using failure_fn = std::function<void(const std::string&)>;
 
 public:
-  wordcounter(const std::string& path);
-  wordcounter(const std::string& path, success_fn&& success_callback, failure_fn&& failure_callback);
+  wordcounter(const std::string& path,
+    success_fn&& success_callback = nullptr,
+    failure_fn&& failure_callback = nullptr);
 
   ~wordcounter();
 
@@ -62,7 +63,8 @@ private:
   void worker(const wchar_t* buffer);
   void parse(const wchar_t* in_buffer, parse_result& out_parse_result);
   void insert_word_to_word_counter(parse_result& out_res, const std::wstring& in_word);
-  void insert_word_to_word_counter(parse_result& out_res, const std::map<std::wstring, unsigned>::const_iterator& wordcounter);
+  void insert_word_to_word_counter(parse_result& out_res, const std::map<std::wstring,
+    unsigned>::const_iterator& wordcounter);
 
   std::vector<std::thread> _threads;
   std::mutex _mutex;
