@@ -8,81 +8,12 @@
 
 wordcounter::wordcounter(const std::string& path)
 {
-  auto timer = std::make_unique<timing>();
-
-  //open
-  std::ifstream inf(path, std::ios::binary);
-  if (!inf.is_open())
+  auto buffers = chunking(path);
+  if (buffers.empty())
   {
-    std::cerr << "WordCounter: can't open input file!\n";
+    std::cerr << "WordCounter: prepare result is empty!\n";
+
     return;
-  }
-
-  //calc lenght
-  inf.seekg(0, std::ios::end);
-  const auto lenght = (unsigned)inf.tellg();
-  inf.seekg(0, std::ios::beg);
-
-  std::cout << "Input file size: " << lenght / (float)1000000 << " Mb\n";
-
-  //split up
-  const auto part = (lenght % _threads_amount) == 0
-    ? lenght / _threads_amount : lenght / _threads_amount + 1;
-  auto l_buffer = new char[lenght + UTF8_SEQUENCE_MAXLEN];
-
-  //read
-  inf.read(l_buffer, lenght);
-  inf.close();
-  l_buffer[lenght] = '\0';
-
-  //convert
-  auto wt = std::make_unique<text>(l_buffer, "");
-  delete[] l_buffer;
-
-  //tune
-  _threads.reserve(_threads_amount);
-  std::vector<const wchar_t*> buffers;
-  buffers.reserve(_threads_amount);
-
-  auto beg = wt->wide_string().c_str();
-  const size_t wlenght = wcslen(beg) + UTF8_SEQUENCE_MAXLEN;
-  const wchar_t* const end = beg + wlenght;
-  auto pch = beg + part;
-
-  for (unsigned i = 0; i < _threads_amount; i++)
-  {
-    pch = wcspbrk(pch, DELIMITER);
-    if (!pch)
-    {
-      if (beg) buffers.push_back(beg);
-
-      break;
-    }
-
-    //modify one char in source string!
-    auto m_pch = (wchar_t*)pch;
-    *m_pch = '\0';
-
-    buffers.push_back(beg);
-
-    if (!(pch + 1 + part))
-    {
-      beg = pch + 1;
-
-      if (beg) buffers.push_back(beg);
-
-      break;
-    }
-
-    beg = pch + 1;
-    pch = pch + 1 + part;
-
-    if (pch >= end)
-    {
-      if (beg) buffers.push_back(beg);
-
-      break;
-    }
   }
 
   //launch workers
@@ -93,9 +24,33 @@ wordcounter::wordcounter(const std::string& path)
       _threads.push_back(std::thread{ &wordcounter::worker, this, std::ref(b) });
     }
 
-  std::cout << "file chunking time: " << timer->get() << '\n';
-
   wait();
+}
+
+wordcounter::wordcounter(const std::string& path, success_fn&& success_callback, failure_fn&& failure_callback)
+{
+  _success_callback = std::move(success_callback);
+  _failure_callback = std::move(failure_callback);
+
+  auto buffers = chunking(path);
+  if (buffers.empty())
+  {
+    std::cerr << "WordCounter: prepare result is empty!\n";
+
+    return;
+  }
+
+  //launch workers
+  for (auto& b : buffers)
+    if (b)
+    {
+      _count++;
+      _threads.push_back(std::thread{ &wordcounter::worker, this, std::ref(b) });
+    }
+
+  for (auto& t : _threads)
+    if (t.joinable())
+      t.join();
 }
 
 wordcounter::~wordcounter()
@@ -103,6 +58,8 @@ wordcounter::~wordcounter()
   for (auto& t : _threads)
     if (t.joinable())
       t.join();
+
+  delete _text;
 }
 
 const parse_result& wordcounter::get() const
@@ -120,6 +77,9 @@ void wordcounter::proceed()
 {
   _work = true;
   _cond.notify_all();
+
+  if (_success_callback)
+    _success_callback(_parse_result);
 }
 
 void wordcounter::worker(const wchar_t* buffer)
@@ -227,4 +187,94 @@ void wordcounter::insert_word_to_word_counter(parse_result& out_res, const std::
     it->second += in_word_counter->second;
   else
     out_res.words_amount.insert(std::pair<std::wstring, unsigned>(in_word_counter->first, in_word_counter->second));
+}
+
+const std::vector<const wchar_t*>& wordcounter::chunking(const std::string& path)
+{
+  if (path.empty())
+  {
+    std::cerr << "WordCounter: input file path is empty!\n";
+
+    return _buffers;
+  }
+
+  auto timer = std::make_unique<timing>();
+
+  //open
+  std::ifstream inf(path, std::ios::binary);
+  if (!inf.is_open())
+  {
+    std::cerr << "WordCounter: can't open input file!\n";
+    return _buffers;
+  }
+
+  //calc lenght
+  inf.seekg(0, std::ios::end);
+  const auto lenght = (unsigned)inf.tellg();
+  inf.seekg(0, std::ios::beg);
+
+  std::cout << "Input file size: " << lenght / (float)1000000 << " Mb\n";
+
+  //split up
+  const auto part = (lenght % _threads_amount) == 0
+    ? lenght / _threads_amount : lenght / _threads_amount + 1;
+  auto l_buffer = new char[lenght + UTF8_SEQUENCE_MAXLEN];
+
+  //read
+  inf.read(l_buffer, lenght);
+  inf.close();
+  l_buffer[lenght] = '\0';
+
+  //convert
+  _text = new text(l_buffer, "");
+  delete[] l_buffer;
+
+  //tune
+  _threads.reserve(_threads_amount);
+  _buffers.reserve(_threads_amount);
+
+  auto beg = _text->wide_string().c_str();
+  const size_t wlenght = wcslen(beg) + UTF8_SEQUENCE_MAXLEN;
+  const wchar_t* const end = beg + wlenght;
+  auto pch = beg + part;
+
+  for (unsigned i = 0; i < _threads_amount; i++)
+  {
+    pch = wcspbrk(pch, DELIMITER);
+    if (!pch)
+    {
+      if (beg) _buffers.push_back(beg);
+
+      break;
+    }
+
+    //modify one char in source string!
+    auto m_pch = (wchar_t*)pch;
+    *m_pch = '\0';
+
+    _buffers.push_back(beg);
+
+    if (!(pch + 1 + part))
+    {
+      beg = pch + 1;
+
+      if (beg) _buffers.push_back(beg);
+
+      break;
+    }
+
+    beg = pch + 1;
+    pch = pch + 1 + part;
+
+    if (pch >= end)
+    {
+      if (beg) _buffers.push_back(beg);
+
+      break;
+    }
+  }
+
+  std::cout << "file chunking time: " << timer->get() << '\n';
+
+  return _buffers;
 }

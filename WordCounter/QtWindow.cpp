@@ -25,31 +25,42 @@ void QtWindow::pushButtonHandle()
   
   ui.label->setText("...");
 
-  auto res = await([&filePath]()
+  std::thread([=]()
     {
-      auto queue = std::make_unique<wordcounter>(filePath.toStdString());
+      std::make_unique<wordcounter>(filePath.toStdString(), [this](const parse_result& res)
+        {
+          ui.label->setText(QString::fromStdString(std::to_string(res.symbol_amount)));
+        }, [this](const std::string& error)
+        {
+          ui.label->setText(QString::fromStdString(error));
+        });
+    }).detach();
 
-      return queue->get();
-    });
+  //auto res = await([&filePath]()
+  //  {
+  //    auto queue = std::make_unique<wordcounter>(filePath.toStdString());
 
-  //open file to write
-  std::wofstream of("out.txt", std::ios::binary);
-  if (!of.is_open())
-  {
-    std::cerr << "Can't open output file!\n";
-    return;
-  }
-  of.imbue(std::locale(""));
+  //    return queue->get();
+  //  });
 
-  //write result
-  for (const auto& r : res.words_amount)
-    of << r.first << " - " << r.second << '\n';
-  of.close();
+  ////open file to write
+  //std::wofstream of("out.txt", std::ios::binary);
+  //if (!of.is_open())
+  //{
+  //  std::cerr << "Can't open output file!\n";
+  //  return;
+  //}
+  //of.imbue(std::locale(""));
 
-  auto wordcounter = 0u;
-  for (const auto& wc : res.words_amount)
-    wordcounter += wc.second;
+  ////write result
+  //for (const auto& r : res.words_amount)
+  //  of << r.first << " - " << r.second << '\n';
+  //of.close();
 
-  ui.label->setText("Words: " + QString::fromStdString(std::to_string(wordcounter))
-    + "\n Symbols: " + QString::fromStdString(std::to_string(res.symbol_amount)));
+  //auto wordcounter = 0u;
+  //for (const auto& wc : res.words_amount)
+  //  wordcounter += wc.second;
+
+  //ui.label->setText("Words: " + QString::fromStdString(std::to_string(wordcounter))
+  //  + "\n Symbols: " + QString::fromStdString(std::to_string(res.symbol_amount)));
 }

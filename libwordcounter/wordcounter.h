@@ -6,6 +6,9 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <functional>
+
+class text;
 
 #ifdef libwordcounter_EXPORTS
 #define libwordcounter_API __declspec(dllexport)
@@ -40,8 +43,13 @@ class
 #endif
   wordcounter
 {
+  using success_fn = std::function<void(const parse_result&)>;
+  using failure_fn = std::function<void(const std::string&)>;
+
 public:
   wordcounter(const std::string& path);
+  wordcounter(const std::string& path, success_fn&& success_callback, failure_fn&& failure_callback);
+
   ~wordcounter();
 
   const parse_result& get() const;
@@ -49,6 +57,8 @@ public:
 private:
   void wait();
   void proceed();
+
+  const std::vector<const wchar_t*>& chunking(const std::string& path);
   void worker(const wchar_t* buffer);
   void parse(const wchar_t* in_buffer, parse_result& out_parse_result);
   void insert_word_to_word_counter(parse_result& out_res, const std::wstring& in_word);
@@ -63,4 +73,11 @@ private:
   parse_result _parse_result;
   const unsigned _threads_amount = std::thread::hardware_concurrency() > 0
     ? std::thread::hardware_concurrency() : 1;
+
+  success_fn&& _success_callback = nullptr;
+  failure_fn&& _failure_callback = nullptr;
+
+  std::vector<const wchar_t*> _buffers;
+
+  text* _text = nullptr;
 };
