@@ -47,8 +47,8 @@ class
 
 public:
   explicit wordcounter(const std::string& path,
-    success_fn&& success_callback = nullptr,
-    failure_fn&& failure_callback = nullptr);
+    const success_fn& success_callback = nullptr,
+    const failure_fn& failure_callback = nullptr);
 
   ~wordcounter();
 
@@ -75,8 +75,8 @@ private:
   const unsigned _threads_amount = std::thread::hardware_concurrency() > 0
     ? std::thread::hardware_concurrency() : 1;
 
-  success_fn&& _success_callback = nullptr;
-  failure_fn&& _failure_callback = nullptr;
+  success_fn _success_callback = nullptr;
+  failure_fn _failure_callback = nullptr;
 
   std::vector<const wchar_t*> _buffers;
 

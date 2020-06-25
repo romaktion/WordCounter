@@ -6,10 +6,10 @@
 #include <fstream>
 
 
-wordcounter::wordcounter(const std::string& path, success_fn&& success_callback /*= nullptr*/, failure_fn&& failure_callback /*= nullptr*/)
+wordcounter::wordcounter(const std::string& path, const success_fn& success_callback /*= nullptr*/, const failure_fn& failure_callback /*= nullptr*/)
 {
-  _success_callback = std::move(success_callback);
-  _failure_callback = std::move(failure_callback);
+  _success_callback = success_callback;
+  _failure_callback = failure_callback;
 
   auto buffers = chunking(path);
   if (buffers.empty())
