@@ -40,13 +40,12 @@ if (WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/libiconv.ilk ${CMAKE_CURRENT_BINARY_DIR}/libiconv.ilk)
 
 elseif(ANDROID)
-	set(IMPORT_DIR ${CMAKE_SOURCE_DIR}/jniLibs/${ANDROID_ABI})
+	set(IMPORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/iconv/${ANDROID_ABI})
 	
 	include_directories(${IMPORT_DIR}/include)
 	
 	add_library(libiconv SHARED IMPORTED)
 	set_target_properties(libiconv PROPERTIES IMPORTED_LOCATION ${IMPORT_DIR}/lib/libiconv.so)
-	target_include_directories(libtext PRIVATE ${IMPORT_DIR}/include)
 
     target_link_libraries(libtext PRIVATE libiconv)
 elseif(UNIX)
