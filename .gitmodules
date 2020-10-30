@@ -1,0 +1,3 @@
+[submodule "third_party/text"]
+	path = third_party/text
+	url = https://github.com/romaktion/libtext.git
