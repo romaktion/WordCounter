@@ -160,7 +160,7 @@ void wordcounter::worker(const wchar_t* buffer)
 
   std::scoped_lock<std::mutex> lock(_micro_mutex);
 
-  for (std::map<std::wstring, unsigned>::const_iterator it = res.words_amount.begin(); it != res.words_amount.end(); ++it)
+  for (auto it = res.words_amount.begin(); it != res.words_amount.end(); ++it)
     insert_word_to_word_counter(_parse_result, it);
 
   _parse_result.symbol_amount += res.symbol_amount;
@@ -236,7 +236,7 @@ void wordcounter::parse(const wchar_t* in_buffer, parse_result& out_parse_result
 
 void wordcounter::insert_word_to_word_counter(parse_result& out_res, const std::wstring& in_word)
 {
-  std::map<std::wstring, unsigned>::iterator it = out_res.words_amount.find(in_word);
+  auto it = out_res.words_amount.find(in_word);
   if (it != out_res.words_amount.end())
     it->second++;
   else
@@ -245,7 +245,7 @@ void wordcounter::insert_word_to_word_counter(parse_result& out_res, const std::
 
 void wordcounter::insert_word_to_word_counter(parse_result& out_res, const std::map<std::wstring, unsigned>::const_iterator& in_word_counter)
 {
-  std::map<std::wstring, unsigned>::iterator it = out_res.words_amount.find(in_word_counter->first);
+  auto it = out_res.words_amount.find(in_word_counter->first);
   if (it != out_res.words_amount.end())
     it->second += in_word_counter->second;
   else
